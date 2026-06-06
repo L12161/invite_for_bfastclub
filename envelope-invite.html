@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>An Invitation</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<style>
+  /* ============================================================
+     EDIT TEXT & LINK FURTHER DOWN: search "EDIT HEADING",
+     "EDIT MESSAGE BODY", "EDIT THE LINK"
+     ============================================================ */
+
+  :root {
+    /* Limited 16-color palette for cohesion */
+    --c-black:    #1a0e08;
+    --c-shadow:   #2a160c;
+    --c-brown-d:  #4a2611;
+    --c-brown:    #6b3a1c;
+    --c-brown-l:  #8a5028;
+    --c-brown-ll: #a8632e;
+    --c-amber-d:  #c9802e;
+    --c-amber:    #ffb347;
+    --c-amber-l:  #ffd27a;
+    --c-cream:    #f3e3c3;
+    --c-cream-d:  #d9c294;
+    --c-cream-w:  #fff5d6;
+    --c-red-d:    #7a1f15;
+    --c-red:      #c0392b;
+    --c-red-l:    #e85a4a;
+    --c-sky-d:    #3a2820;
+    --c-sky:      #5a4030;
+    --c-sky-l:    #7a5840;
+    --c-ink:      #3a1f0e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--c-black);
+    font-family: 'VT323', monospace;
+    /* CRITICAL: force all images and SVG to render with sharp pixels */
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    -ms-interpolation-mode: nearest-neighbor;
+  }
+
+  svg {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    shape-rendering: crispEdges;
+  }
+
+  body {
+    position: relative;
+    background: var(--c-sky);
+  }
+
+  /* ============================================================
+     PIXEL-DITHERED SKY using stepped color blocks + dot pattern
+     ============================================================ */
+  .sky-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+      /* dot dither pattern overlay */
+      radial-gradient(circle at 2px 2px, rgba(0,0,0,0.15) 1px, transparent 1px) 0 0 / 4px 4px,
+      /* stepped horizontal bands using hard-stop gradient = no smoothing */
+      linear-gradient(
+        180deg,
+        var(--c-sky-d)  0%,    var(--c-sky-d)  20%,
+        var(--c-sky)    20%,   var(--c-sky)    45%,
+        var(--c-sky-l)  45%,   var(--c-sky-l)  60%,
+        var(--c-brown)  60%,   var(--c-brown)  100%
+      );
+  }
+
+  /* secondary dither overlay between bands for smoother transition */
+  .sky-dither {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background-image:
+      repeating-conic-gradient(
+        var(--c-sky-d) 0% 25%,
+        transparent 25% 50%,
+        var(--c-sky) 50% 75%,
+        transparent 75% 100%
+      );
+    background-size: 8px 8px;
+    background-position: 0 18%;
+    background-repeat: no-repeat;
+    opacity: 0.4;
+    height: 8%;
+    top: 17%;
+  }
+
+  /* ============================================================
+     SCENE WRAPPER — everything scales together
+     ============================================================ */
+  .scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+  }
+
+  /* All SVG sprites use viewBox in real pixel units (e.g. 64x64)
+     and are scaled up by CSS — that's what gives the stair-step
+     look. They're never resized smoothly. */
+
+  .sprite {
+    position: fixed;
+    pointer-events: none;
+    transition: opacity 0.6s ease, filter 0.6s ease;
+  }
+
+  /* When letter opens, dim & desaturate background props so the letter pops */
+  body.letter-open .sprite,
+  body.letter-open .buildings,
+  body.letter-open .rain,
+  body.letter-open .light-pool {
+    opacity: 0.35;
+    filter: brightness(0.6);
+  }
+  body.letter-open .desk,
+  body.letter-open .desk-edge,
+  body.letter-open .sky-bg,
+  body.letter-open .sky-dither {
+    filter: brightness(0.5);
+    transition: filter 0.6s ease;
+  }
+
+  /* Vignette overlay that appears under the letter to push focus center */
+  .focus-vignette {
+    position: fixed;
+    inset: 0;
+    z-index: 15;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse 50% 60% at 50% 50%,
+      transparent 0%,
+      transparent 30%,
+      rgba(0,0,0,0.4) 60%,
+      rgba(0,0,0,0.75) 100%
+    );
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  body.letter-open .focus-vignette { opacity: 1; }
+
+  /* Cloud sprites */
+  .cloud-a { top: 8%;  left: 5%;  width: 200px; animation: drift-a 80s linear infinite; }
+  .cloud-b { top: 5%;  left: 60%; width: 160px; animation: drift-b 100s linear infinite; opacity: 0.85; }
+  .cloud-c { top: 22%; left: 30%; width: 240px; animation: drift-c 130s linear infinite; opacity: 0.7; }
+
+  @keyframes drift-a { from { transform: translateX(-300px); } to { transform: translateX(100vw); } }
+  @keyframes drift-b { from { transform: translateX(-300px); } to { transform: translateX(100vw); } }
+  @keyframes drift-c { from { transform: translateX(-300px); } to { transform: translateX(100vw); } }
+
+  /* Distant buildings */
+  .buildings {
+    position: fixed;
+    bottom: 45%;
+    left: 0;
+    right: 0;
+    height: 100px;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .buildings svg { width: 100%; height: 100%; display: block; }
+
+  /* ============================================================
+     RAIN — individual pixel raindrops
+     ============================================================ */
+  .rain {
+    position: fixed;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .raindrop {
+    position: absolute;
+    width: 3px;
+    background: var(--c-cream);
+    top: -20px;
+    opacity: 0.45;
+    animation: fall linear infinite;
+    /* break drop into segments using box-shadow for chunky pixel look */
+    box-shadow: 0 -6px 0 var(--c-cream-d);
+  }
+
+  @keyframes fall {
+    0%   { transform: translateY(-20px); opacity: 0; }
+    10%  { opacity: 0.55; }
+    90%  { opacity: 0.55; }
+    100% { transform: translateY(105vh); opacity: 0; }
+  }
+
+  /* ============================================================
+     DESK — built from 8px tile pattern, not a smooth gradient
+     ============================================================ */
+  .desk {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 45%;
+    z-index: 5;
+    pointer-events: none;
+    background:
+      /* grain knots & speckles */
+      radial-gradient(circle at 16px 24px, var(--c-brown-d) 2px, transparent 2px) 0 0 / 64px 32px,
+      radial-gradient(circle at 48px 8px,  var(--c-brown-d) 2px, transparent 2px) 0 0 / 96px 48px,
+      radial-gradient(circle at 4px 12px,  var(--c-brown-l) 2px, transparent 2px) 0 0 / 80px 40px,
+      /* horizontal plank lines */
+      repeating-linear-gradient(
+        180deg,
+        var(--c-brown)   0px,   var(--c-brown)   24px,
+        var(--c-brown-d) 24px,  var(--c-brown-d) 26px,
+        var(--c-brown-l) 26px,  var(--c-brown-l) 28px,
+        var(--c-brown)   28px,  var(--c-brown)   56px,
+        var(--c-brown-d) 56px,  var(--c-brown-d) 58px
+      );
+  }
+
+  /* Top edge of desk (stair-step pixel ridge) */
+  .desk-edge {
+    position: fixed;
+    bottom: 45%;
+    left: 0;
+    right: 0;
+    height: 8px;
+    z-index: 6;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg,
+        var(--c-brown-l) 0px,   var(--c-brown-l) 2px,
+        var(--c-amber-d) 2px,   var(--c-amber-d) 4px,
+        var(--c-brown-l) 4px,   var(--c-brown-l) 6px,
+        var(--c-brown-d) 6px,   var(--c-brown-d) 8px
+      );
+  }
+
+  /* Light pool from candle, rendered as discrete radial steps not a smooth gradient */
+  .light-pool {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    height: 45%;
+    z-index: 6;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse 60% 100% at 50% 30%,
+      rgba(255, 179, 71, 0.30) 0%,
+      rgba(255, 179, 71, 0.30) 30%,
+      rgba(255, 179, 71, 0.18) 30%,
+      rgba(255, 179, 71, 0.18) 55%,
+      rgba(255, 179, 71, 0.08) 55%,
+      rgba(255, 179, 71, 0.08) 80%,
+      transparent 80%
+    );
+    animation: lightFlicker 3s steps(2, end) infinite;
+    mix-blend-mode: screen;
+  }
+
+  @keyframes lightFlicker {
+    0%, 100% { opacity: 0.85; }
+    50%      { opacity: 1; }
+  }
+
+  /* ============================================================
+     PIXEL SPRITES — all positioned relative to center
+     ============================================================ */
+  .candle-sprite {
+    bottom: 38%;
+    left: calc(50% - 240px);
+    width: 64px;
+    height: 96px;
+    z-index: 8;
+  }
+  .candle-sprite svg { width: 100%; height: 100%; display: block; }
+  .flame-flicker { animation: flameFlicker 0.3s steps(2, end) infinite; transform-origin: center bottom; }
+  @keyframes flameFlicker {
+    0%   { transform: scale(1, 1); }
+    50%  { transform: scale(0.92, 1.06); }
+    100% { transform: scale(1.04, 0.96); }
+  }
+
+  .books-sprite {
+    bottom: 38%;
+    right: calc(50% - 320px);
+    width: 120px;
+    height: 130px;
+    z-index: 7;
+  }
+  .books-sprite svg { width: 100%; height: 100%; display: block; }
+  .steam-puff { animation: steamRise 3s steps(6, end) infinite; }
+  .steam-puff-2 { animation: steamRise 3s steps(6, end) infinite; animation-delay: -1.5s; }
+  @keyframes steamRise {
+    0%   { transform: translate(0, 0)    scale(1);   opacity: 0; }
+    30%  { opacity: 0.7; }
+    100% { transform: translate(2px, -30px) scale(1.5); opacity: 0; }
+  }
+
+  .ink-sprite {
+    bottom: 38%;
+    right: calc(50% - 220px);
+    width: 56px;
+    height: 80px;
+    z-index: 8;
+  }
+  .ink-sprite svg { width: 100%; height: 100%; display: block; }
+
+  .crumple-sprite {
+    bottom: 36%;
+    left: calc(50% - 140px);
+    width: 40px;
+    height: 36px;
+    z-index: 8;
+  }
+  .crumple-sprite svg { width: 100%; height: 100%; display: block; }
+
+  /* small ink splat */
+  .splat-sprite {
+    bottom: 37%;
+    left: calc(50% + 180px);
+    width: 28px;
+    height: 20px;
+    z-index: 7;
+  }
+  .splat-sprite svg { width: 100%; height: 100%; display: block; }
+
+  /* ============================================================
+     ENVELOPE — pure SVG pixel art
+     ============================================================ */
+  .stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 1000px;
+    z-index: 10;
+  }
+
+  .envelope-wrap {
+    position: relative;
+    width: 320px;
+    height: 220px;
+    margin-top: -8%;
+    cursor: pointer;
+    animation: float 4s steps(8, end) infinite;
+    transition: transform 0.4s ease, opacity 0.6s ease;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+  }
+
+  .envelope-wrap:hover { transform: translateY(-4px) scale(1.02); }
+
+  /* glow halo — also stepped, not smooth */
+  .envelope-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -60px;
+    background: radial-gradient(
+      ellipse at center,
+      rgba(255, 179, 71, 0.5)  0%,
+      rgba(255, 179, 71, 0.5)  20%,
+      rgba(255, 179, 71, 0.3)  20%,
+      rgba(255, 179, 71, 0.3)  40%,
+      rgba(255, 179, 71, 0.12) 40%,
+      rgba(255, 179, 71, 0.12) 65%,
+      transparent 65%
+    );
+    pointer-events: none;
+    animation: pulse 2.4s steps(4, end) infinite;
+    z-index: -1;
+    mix-blend-mode: screen;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50%      { opacity: 1;   transform: scale(1.08); }
+  }
+
+  .envelope-wrap::after {
+    content: '';
+    position: absolute;
+    bottom: -16px;
+    left: 12%;
+    right: 12%;
+    height: 8px;
+    background: rgba(0,0,0,0.5);
+    z-index: -2;
+    /* pixelated shadow not soft */
+    clip-path: polygon(8% 0, 92% 0, 96% 50%, 92% 100%, 8% 100%, 4% 50%);
+  }
+
+  .envelope-svg, .letter-svg-bg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .env-flap-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60%;
+    transform-origin: top center;
+    transition: transform 0.7s cubic-bezier(0.5, 0, 0.5, 1);
+    z-index: 3;
+  }
+
+  .env-seal-svg {
+    position: absolute;
+    top: 32%;
+    left: 50%;
+    transform: translate(-50%, 0);
+    width: 56px;
+    height: 56px;
+    z-index: 4;
+    transition: opacity 0.25s ease, transform 0.35s ease;
+  }
+
+  /* OPENING STATES */
+  .envelope-wrap.opening { cursor: default; animation: none; }
+  .envelope-wrap.opening .env-flap-svg { transform: rotateX(-180deg); }
+  .envelope-wrap.opening .env-seal-svg {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0.2);
+  }
+  .envelope-wrap.opened {
+    animation: envelopeShrink 0.8s steps(8, end) forwards;
+    animation-delay: 0.6s;
+  }
+  @keyframes envelopeShrink {
+    0%   { transform: translateY(0)    scale(1);   opacity: 1; }
+    100% { transform: translateY(60px) scale(0.4); opacity: 0; }
+  }
+  .envelope-wrap.opened::before {
+    animation: glowFade 0.8s steps(4, end) forwards;
+    animation-delay: 0.6s;
+  }
+  @keyframes glowFade { to { opacity: 0; } }
+  .envelope-wrap.opening .hint { opacity: 0; transition: opacity 0.3s ease; }
+
+  /* Hint text */
+  .hint {
+    position: absolute;
+    bottom: -68px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'VT323', monospace;
+    font-size: 22px;
+    color: var(--c-amber-l);
+    letter-spacing: 2px;
+    text-shadow:
+      2px 0 0 var(--c-black),
+      -2px 0 0 var(--c-black),
+      0 2px 0 var(--c-black),
+      0 -2px 0 var(--c-black),
+      0 0 8px rgba(255, 179, 71, 0.8);
+    white-space: nowrap;
+    animation: hintBlink 1.4s steps(2, end) infinite;
+  }
+
+  @keyframes hintBlink {
+    0%, 49%   { opacity: 1; }
+    50%, 100% { opacity: 0.4; }
+  }
+
+  /* ============================================================
+     LETTER
+     ============================================================ */
+  .letter {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: min(540px, 92vw);
+    max-height: 86vh;
+    transform: translate(-50%, 30%) scale(0.4);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 100;
+    background: transparent;
+  }
+
+  .letter.showing {
+    animation: letterRise 1.2s steps(12, end) forwards;
+    animation-delay: 0.9s;
+    pointer-events: auto;
+  }
+
+  @keyframes letterRise {
+    0%   { transform: translate(-50%, 30%)  scale(0.4); opacity: 0; }
+    40%  { opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1);   opacity: 1; }
+  }
+
+  /* The paper background is an SVG with stair-step pixel edges */
+  .letter-paper {
+    position: relative;
+    width: 100%;
+    /* paper border drawn entirely with box-shadows = pixel-perfect */
+    background: var(--c-cream);
+    /* layered shadows = stepped pixel border, no smooth blur */
+    box-shadow:
+      /* outer dark frame */
+      0  -4px 0 var(--c-cream-d),
+      0   4px 0 var(--c-cream-d),
+     -4px  0  0 var(--c-cream-d),
+      4px  0  0 var(--c-cream-d),
+      /* second frame layer */
+     -4px -4px 0 var(--c-cream-d),
+      4px -4px 0 var(--c-cream-d),
+     -4px  4px 0 var(--c-cream-d),
+      4px  4px 0 var(--c-cream-d),
+      /* outer black border */
+      0  -8px 0 var(--c-black),
+      0   8px 0 var(--c-black),
+     -8px  0  0 var(--c-black),
+      8px  0  0 var(--c-black),
+     -8px -8px 0 var(--c-black),
+      8px -8px 0 var(--c-black),
+     -8px  8px 0 var(--c-black),
+      8px  8px 0 var(--c-black),
+      /* drop shadow chunky */
+      0 16px 0 rgba(0,0,0,0.5),
+      /* glow */
+      0 0 80px rgba(255, 179, 71, 0.4);
+    padding: 48px 44px 40px;
+    overflow-y: auto;
+    max-height: 86vh;
+    /* horizontal rule grid lines */
+    background-image:
+      repeating-linear-gradient(
+        180deg,
+        transparent 0,
+        transparent 27px,
+        rgba(107, 58, 28, 0.12) 27px,
+        rgba(107, 58, 28, 0.12) 28px
+      );
+  }
+
+  /* Torn pixel top edge — stair-step polygon */
+  .letter-paper::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    right: -8px;
+    height: 12px;
+    background: var(--c-cream);
+    box-shadow:
+      0 -4px 0 var(--c-cream-d),
+      0 -8px 0 var(--c-black);
+    /* stair-step zigzag */
+    clip-path: polygon(
+      0% 100%,
+      4% 100%, 4% 25%, 8% 25%, 8% 75%, 12% 75%, 12% 0%,
+      16% 0%, 16% 50%, 20% 50%, 20% 25%, 24% 25%, 24% 100%,
+      28% 100%, 28% 50%, 32% 50%, 32% 0%, 36% 0%, 36% 75%,
+      40% 75%, 40% 25%, 44% 25%, 44% 50%, 48% 50%, 48% 0%,
+      52% 0%, 52% 50%, 56% 50%, 56% 25%, 60% 25%, 60% 100%,
+      64% 100%, 64% 75%, 68% 75%, 68% 0%, 72% 0%, 72% 50%,
+      76% 50%, 76% 25%, 80% 25%, 80% 75%, 84% 75%, 84% 0%,
+      88% 0%, 88% 50%, 92% 50%, 92% 25%, 96% 25%, 96% 100%,
+      100% 100%
+    );
+  }
+
+  .letter-seal-mark {
+    position: absolute;
+    top: -16px;
+    right: 24px;
+    width: 48px;
+    height: 48px;
+    z-index: 5;
+  }
+  .letter-seal-mark svg { width: 100%; height: 100%; display: block; }
+
+  .letter-content { position: relative; z-index: 2; }
+
+  .letter-heading {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 18px;
+    color: var(--c-brown-d);
+    text-align: center;
+    margin-bottom: 28px;
+    letter-spacing: 1px;
+    line-height: 1.6;
+  }
+
+  .letter-body {
+    font-family: 'VT323', monospace;
+    font-size: 26px;
+    color: var(--c-ink);
+    line-height: 1.5;
+    margin-bottom: 32px;
+    white-space: pre-line;
+  }
+
+  /* Pixel divider — chunky blocks instead of smooth gradient */
+  .letter-divider {
+    width: 80%;
+    height: 8px;
+    margin: 0 auto 28px;
+    position: relative;
+    background:
+      linear-gradient(90deg,
+        transparent 0%,    transparent 8%,
+        var(--c-brown) 8%, var(--c-brown) 12%,
+        transparent 12%,   transparent 20%,
+        var(--c-brown) 20%, var(--c-brown) 80%,
+        transparent 80%,   transparent 88%,
+        var(--c-brown) 88%, var(--c-brown) 92%,
+        transparent 92%
+      );
+    box-shadow:
+      0 4px 0 var(--c-brown-d);
+  }
+  .letter-divider::before,
+  .letter-divider::after {
+    content: '✦';
+    position: absolute;
+    top: -4px;
+    font-size: 16px;
+    color: var(--c-brown-d);
+    background: var(--c-cream);
+    padding: 0 6px;
+  }
+  .letter-divider::before { left: 33%; }
+  .letter-divider::after  { right: 33%; }
+
+  .invite-link-wrap { text-align: center; margin-top: 12px; }
+  .invite-prefix {
+    font-family: 'VT323', monospace;
+    font-size: 22px;
+    color: var(--c-brown);
+    margin-bottom: 14px;
+    letter-spacing: 1px;
+  }
+
+  /* Pixel button using ONLY chunky box-shadows */
+  .invite-link {
+    display: inline-block;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 16px;
+    color: var(--c-amber);
+    text-decoration: none;
+    padding: 14px 24px;
+    letter-spacing: 2px;
+    background: var(--c-black);
+    position: relative;
+    /* stepped pixel border, no smoothing */
+    box-shadow:
+      0   -4px 0 var(--c-amber),
+      0    4px 0 var(--c-amber-d),
+     -4px  0   0 var(--c-amber),
+      4px  0   0 var(--c-amber),
+     -4px -4px 0 var(--c-amber),
+      4px -4px 0 var(--c-amber),
+     -4px  4px 0 var(--c-amber-d),
+      4px  4px 0 var(--c-amber-d),
+      0    8px 0 var(--c-black),
+     -8px  0   0 var(--c-black),
+      8px  0   0 var(--c-black),
+      0   -8px 0 var(--c-black),
+     -8px -8px 0 var(--c-black),
+      8px -8px 0 var(--c-black),
+     -8px  8px 0 var(--c-black),
+      8px  8px 0 var(--c-black),
+      0 0 20px rgba(255, 179, 71, 0.5),
+      0 0 40px rgba(255, 179, 71, 0.3);
+    text-shadow:
+      2px 0 0 var(--c-brown-d),
+      0 2px 0 var(--c-brown-d),
+      0 0 6px var(--c-amber),
+      0 0 12px var(--c-amber);
+    animation: linkPulse 1.6s steps(2, end) infinite;
+    transition: transform 0.12s steps(2, end);
+  }
+
+  @keyframes linkPulse {
+    0%, 49%   { color: var(--c-amber);   filter: brightness(1); }
+    50%, 100% { color: var(--c-amber-l); filter: brightness(1.2); }
+  }
+
+  .invite-link:hover  { transform: translateY(-2px); }
+  .invite-link:active { transform: translateY(2px); }
+
+  /* Mobile */
+  @media (max-width: 600px) {
+    .envelope-wrap { width: 240px; height: 165px; }
+    .candle-sprite { left: 12px;  bottom: 36%; width: 48px; height: 72px; }
+    .ink-sprite    { right: 12px; bottom: 36%; width: 42px; height: 60px; }
+    .books-sprite, .crumple-sprite, .splat-sprite { display: none; }
+    .letter-paper { padding: 36px 22px 28px; }
+    .letter-heading { font-size: 13px; }
+    .letter-body { font-size: 22px; }
+    .invite-link { font-size: 12px; padding: 12px 18px; }
+    .hint { font-size: 18px; bottom: -52px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sky-bg"></div>
+<div class="sky-dither"></div>
+
+<!-- ============================================================
+     PIXEL CLOUDS — SVG with discrete rectangle "pixels"
+     Each <rect> is a single 1x1 unit in the viewBox = 1 visible pixel
+     ============================================================ -->
+<svg class="sprite cloud-a" viewBox="0 0 24 8" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- top highlight row -->
+  <rect x="4" y="0" width="1" height="1" fill="#6e4f3c"/>
+  <rect x="5" y="0" width="1" height="1" fill="#6e4f3c"/>
+  <rect x="6" y="0" width="1" height="1" fill="#6e4f3c"/>
+  <rect x="9" y="0" width="1" height="1" fill="#6e4f3c"/>
+  <rect x="10" y="0" width="1" height="1" fill="#6e4f3c"/>
+  <rect x="14" y="0" width="1" height="1" fill="#6e4f3c"/>
+  <rect x="15" y="0" width="1" height="1" fill="#6e4f3c"/>
+  <!-- second row -->
+  <rect x="2" y="1" width="1" height="1" fill="#6e4f3c"/>
+  <rect x="3" y="1" width="1" height="1" fill="#7a5840"/>
+  <rect x="4" y="1" width="1" height="1" fill="#7a5840"/>
+  <rect x="5" y="1" width="1" height="1" fill="#7a5840"/>
+  <rect x="6" y="1" width="1" height="1" fill="#7a5840"/>
+  <rect x="7" y="1" width="1" height="1" fill="#6e4f3c"/>
+  <rect x="8" y="1" width="1" height="1" fill="#6e4f3c"/>
+  <rect x="9" y="1" width="1" height="1" fill="#7a5840"/>
+  <rect x="10" y="1" width="1" height="1" fill="#7a5840"/>
+  <rect x="11" y="1" width="1" height="1" fill="#7a5840"/>
+  <rect x="12" y="1" width="1" height="1" fill="#6e4f3c"/>
+  <rect x="13" y="1" width="1" height="1" fill="#6e4f3c"/>
+  <rect x="14" y="1" width="1" height="1" fill="#7a5840"/>
+  <rect x="15" y="1" width="1" height="1" fill="#7a5840"/>
+  <rect x="16" y="1" width="1" height="1" fill="#6e4f3c"/>
+  <rect x="17" y="1" width="1" height="1" fill="#6e4f3c"/>
+  <!-- main body -->
+  <rect x="1" y="2" width="20" height="1" fill="#5a4030"/>
+  <rect x="2" y="2" width="3" height="1" fill="#6e4f3c"/>
+  <rect x="7" y="2" width="3" height="1" fill="#6e4f3c"/>
+  <rect x="13" y="2" width="3" height="1" fill="#6e4f3c"/>
+  <rect x="0" y="3" width="22" height="1" fill="#5a4030"/>
+  <rect x="0" y="4" width="23" height="1" fill="#4a352a"/>
+  <rect x="1" y="5" width="21" height="1" fill="#4a352a"/>
+  <!-- bottom shadow -->
+  <rect x="2" y="6" width="18" height="1" fill="#2e2018"/>
+  <rect x="3" y="7" width="16" height="1" fill="#2e2018"/>
+</svg>
+
+<svg class="sprite cloud-b" viewBox="0 0 18 6" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="3" y="0" width="2" height="1" fill="#6e4f3c"/>
+  <rect x="8" y="0" width="3" height="1" fill="#6e4f3c"/>
+  <rect x="13" y="0" width="2" height="1" fill="#6e4f3c"/>
+  <rect x="1" y="1" width="16" height="1" fill="#5a4030"/>
+  <rect x="2" y="1" width="3" height="1" fill="#7a5840"/>
+  <rect x="8" y="1" width="3" height="1" fill="#7a5840"/>
+  <rect x="0" y="2" width="18" height="1" fill="#5a4030"/>
+  <rect x="0" y="3" width="18" height="1" fill="#4a352a"/>
+  <rect x="1" y="4" width="16" height="1" fill="#4a352a"/>
+  <rect x="3" y="5" width="12" height="1" fill="#2e2018"/>
+</svg>
+
+<svg class="sprite cloud-c" viewBox="0 0 30 8" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="3" y="1" width="3" height="1" fill="#6e4f3c"/>
+  <rect x="10" y="1" width="4" height="1" fill="#6e4f3c"/>
+  <rect x="18" y="1" width="3" height="1" fill="#6e4f3c"/>
+  <rect x="24" y="1" width="3" height="1" fill="#6e4f3c"/>
+  <rect x="1" y="2" width="28" height="1" fill="#5a4030"/>
+  <rect x="0" y="3" width="30" height="1" fill="#5a4030"/>
+  <rect x="0" y="4" width="30" height="1" fill="#4a352a"/>
+  <rect x="1" y="5" width="28" height="1" fill="#4a352a"/>
+  <rect x="3" y="6" width="24" height="1" fill="#2e2018"/>
+  <rect x="5" y="7" width="20" height="1" fill="#2e2018"/>
+</svg>
+
+<!-- ============================================================
+     DISTANT BUILDINGS — pixel silhouettes
+     ============================================================ -->
+<div class="buildings">
+  <svg viewBox="0 0 320 50" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated;">
+    <!-- building 1 -->
+    <rect x="20" y="20" width="22" height="30" fill="#2e2018"/>
+    <rect x="42" y="22" width="2" height="28" fill="#1a0e08"/>
+    <rect x="26" y="28" width="3" height="3" fill="#ffb347" opacity="0.7"/>
+    <rect x="34" y="36" width="3" height="3" fill="#ffb347" opacity="0.5"/>
+    <!-- building 2 (taller) -->
+    <rect x="50" y="12" width="18" height="38" fill="#2e2018"/>
+    <rect x="68" y="14" width="2" height="36" fill="#1a0e08"/>
+    <rect x="54" y="20" width="3" height="3" fill="#ffb347" opacity="0.6"/>
+    <rect x="62" y="20" width="3" height="3" fill="#ffb347" opacity="0.8"/>
+    <rect x="54" y="32" width="3" height="3" fill="#ffb347" opacity="0.4"/>
+    <rect x="62" y="40" width="3" height="3" fill="#ffb347" opacity="0.7"/>
+    <!-- building 3 -->
+    <rect x="78" y="25" width="28" height="25" fill="#2e2018"/>
+    <rect x="106" y="27" width="2" height="23" fill="#1a0e08"/>
+    <rect x="84" y="32" width="3" height="3" fill="#ffb347" opacity="0.5"/>
+    <rect x="94" y="32" width="3" height="3" fill="#ffb347" opacity="0.7"/>
+    <rect x="84" y="42" width="3" height="3" fill="#ffb347" opacity="0.6"/>
+    <!-- building 4 (chimney) -->
+    <rect x="115" y="18" width="20" height="32" fill="#2e2018"/>
+    <rect x="120" y="14" width="6" height="4" fill="#2e2018"/>
+    <rect x="135" y="20" width="2" height="30" fill="#1a0e08"/>
+    <rect x="120" y="26" width="3" height="3" fill="#ffb347" opacity="0.5"/>
+    <rect x="128" y="36" width="3" height="3" fill="#ffb347" opacity="0.6"/>
+    <!-- right side cluster -->
+    <rect x="190" y="22" width="24" height="28" fill="#2e2018"/>
+    <rect x="214" y="24" width="2" height="26" fill="#1a0e08"/>
+    <rect x="196" y="30" width="3" height="3" fill="#ffb347" opacity="0.7"/>
+    <rect x="206" y="30" width="3" height="3" fill="#ffb347" opacity="0.5"/>
+    <rect x="196" y="40" width="3" height="3" fill="#ffb347" opacity="0.6"/>
+
+    <rect x="222" y="15" width="16" height="35" fill="#2e2018"/>
+    <rect x="238" y="17" width="2" height="33" fill="#1a0e08"/>
+    <rect x="226" y="24" width="3" height="3" fill="#ffb347" opacity="0.6"/>
+    <rect x="232" y="34" width="3" height="3" fill="#ffb347" opacity="0.4"/>
+    <rect x="226" y="44" width="3" height="3" fill="#ffb347" opacity="0.7"/>
+
+    <rect x="248" y="28" width="32" height="22" fill="#2e2018"/>
+    <rect x="280" y="30" width="2" height="20" fill="#1a0e08"/>
+    <rect x="254" y="34" width="3" height="3" fill="#ffb347" opacity="0.5"/>
+    <rect x="264" y="34" width="3" height="3" fill="#ffb347" opacity="0.8"/>
+    <rect x="254" y="42" width="3" height="3" fill="#ffb347" opacity="0.5"/>
+    <rect x="272" y="42" width="3" height="3" fill="#ffb347" opacity="0.6"/>
+
+    <rect x="290" y="20" width="18" height="30" fill="#2e2018"/>
+    <rect x="308" y="22" width="2" height="28" fill="#1a0e08"/>
+    <rect x="294" y="28" width="3" height="3" fill="#ffb347" opacity="0.7"/>
+    <rect x="302" y="38" width="3" height="3" fill="#ffb347" opacity="0.5"/>
+  </svg>
+</div>
+
+<div class="rain" id="rain"></div>
+
+<div class="desk"></div>
+<div class="desk-edge"></div>
+<div class="light-pool"></div>
+
+<!-- ============================================================
+     CANDLE SPRITE — every "pixel" is a 4x4 rect
+     ============================================================ -->
+<div class="sprite candle-sprite">
+  <svg viewBox="0 0 16 24" preserveAspectRatio="xMidYEnd meet" xmlns="http://www.w3.org/2000/svg">
+    <!-- flame group -->
+    <g class="flame-flicker">
+      <!-- outer flame -->
+      <rect x="7" y="2" width="2" height="1" fill="#ff7a1a"/>
+      <rect x="6" y="3" width="4" height="1" fill="#ff7a1a"/>
+      <rect x="5" y="4" width="6" height="1" fill="#ff7a1a"/>
+      <rect x="5" y="5" width="6" height="1" fill="#ff7a1a"/>
+      <rect x="5" y="6" width="6" height="1" fill="#ff7a1a"/>
+      <rect x="6" y="7" width="4" height="1" fill="#ff7a1a"/>
+      <!-- mid flame -->
+      <rect x="7" y="3" width="2" height="1" fill="#ffb347"/>
+      <rect x="6" y="4" width="4" height="1" fill="#ffb347"/>
+      <rect x="6" y="5" width="4" height="1" fill="#ffb347"/>
+      <rect x="6" y="6" width="4" height="1" fill="#ffb347"/>
+      <!-- inner flame core -->
+      <rect x="7" y="4" width="2" height="1" fill="#fff5d6"/>
+      <rect x="7" y="5" width="2" height="1" fill="#fff5d6"/>
+      <rect x="7" y="6" width="2" height="2" fill="#ffd27a"/>
+    </g>
+    <!-- wick -->
+    <rect x="7" y="8" width="2" height="1" fill="#1a0e08"/>
+    <!-- candle wax body -->
+    <rect x="5" y="9" width="6" height="1" fill="#fff5d6"/>
+    <rect x="5" y="10" width="1" height="9" fill="#fff5d6"/>
+    <rect x="6" y="10" width="3" height="9" fill="#f3e3c3"/>
+    <rect x="9" y="10" width="2" height="9" fill="#d9c294"/>
+    <!-- wax drip -->
+    <rect x="11" y="12" width="1" height="4" fill="#f3e3c3"/>
+    <rect x="11" y="16" width="1" height="1" fill="#d9c294"/>
+    <!-- holder -->
+    <rect x="3" y="19" width="10" height="1" fill="#8a5028"/>
+    <rect x="2" y="20" width="12" height="2" fill="#6b3a1c"/>
+    <rect x="2" y="22" width="12" height="1" fill="#4a2611"/>
+    <rect x="3" y="23" width="10" height="1" fill="#1a0e08"/>
+  </svg>
+</div>
+
+<!-- ============================================================
+     CRUMPLED PAPER
+     ============================================================ -->
+<div class="sprite crumple-sprite">
+  <svg viewBox="0 0 10 9" preserveAspectRatio="xMidYEnd meet" xmlns="http://www.w3.org/2000/svg">
+    <rect x="2" y="0" width="6" height="1" fill="#d9c294"/>
+    <rect x="1" y="1" width="2" height="1" fill="#d9c294"/>
+    <rect x="3" y="1" width="4" height="1" fill="#fff5d6"/>
+    <rect x="7" y="1" width="2" height="1" fill="#d9c294"/>
+    <rect x="0" y="2" width="1" height="1" fill="#d9c294"/>
+    <rect x="1" y="2" width="2" height="1" fill="#f3e3c3"/>
+    <rect x="3" y="2" width="2" height="1" fill="#fff5d6"/>
+    <rect x="5" y="2" width="3" height="1" fill="#f3e3c3"/>
+    <rect x="8" y="2" width="2" height="1" fill="#d9c294"/>
+    <rect x="0" y="3" width="2" height="1" fill="#f3e3c3"/>
+    <rect x="2" y="3" width="1" height="1" fill="#6b3a1c"/>
+    <rect x="3" y="3" width="3" height="1" fill="#f3e3c3"/>
+    <rect x="6" y="3" width="1" height="1" fill="#6b3a1c"/>
+    <rect x="7" y="3" width="3" height="1" fill="#f3e3c3"/>
+    <rect x="0" y="4" width="3" height="1" fill="#d9c294"/>
+    <rect x="3" y="4" width="4" height="1" fill="#f3e3c3"/>
+    <rect x="7" y="4" width="3" height="1" fill="#d9c294"/>
+    <rect x="1" y="5" width="2" height="1" fill="#f3e3c3"/>
+    <rect x="3" y="5" width="1" height="1" fill="#6b3a1c"/>
+    <rect x="4" y="5" width="3" height="1" fill="#fff5d6"/>
+    <rect x="7" y="5" width="1" height="1" fill="#6b3a1c"/>
+    <rect x="8" y="5" width="2" height="1" fill="#f3e3c3"/>
+    <rect x="0" y="6" width="10" height="1" fill="#d9c294"/>
+    <rect x="1" y="7" width="8" height="1" fill="#d9c294"/>
+    <rect x="2" y="8" width="6" height="1" fill="#4a2611"/>
+  </svg>
+</div>
+
+<!-- ============================================================
+     INK BOTTLE WITH QUILL
+     ============================================================ -->
+<div class="sprite ink-sprite">
+  <svg viewBox="0 0 14 20" preserveAspectRatio="xMidYEnd meet" xmlns="http://www.w3.org/2000/svg">
+    <!-- quill feather -->
+    <rect x="10" y="0" width="1" height="1" fill="#fff5d6"/>
+    <rect x="9" y="1" width="3" height="1" fill="#fff5d6"/>
+    <rect x="9" y="2" width="1" height="1" fill="#d9c294"/>
+    <rect x="10" y="2" width="2" height="1" fill="#fff5d6"/>
+    <rect x="8" y="3" width="1" height="1" fill="#d9c294"/>
+    <rect x="9" y="3" width="3" height="1" fill="#f3e3c3"/>
+    <rect x="8" y="4" width="1" height="1" fill="#6b3a1c"/>
+    <rect x="9" y="4" width="2" height="1" fill="#f3e3c3"/>
+    <rect x="11" y="4" width="1" height="1" fill="#d9c294"/>
+    <rect x="7" y="5" width="1" height="1" fill="#6b3a1c"/>
+    <rect x="8" y="5" width="3" height="1" fill="#f3e3c3"/>
+    <rect x="11" y="5" width="1" height="1" fill="#d9c294"/>
+    <rect x="7" y="6" width="1" height="1" fill="#6b3a1c"/>
+    <rect x="8" y="6" width="2" height="1" fill="#d9c294"/>
+    <rect x="10" y="6" width="1" height="1" fill="#6b3a1c"/>
+    <!-- quill shaft -->
+    <rect x="6" y="7" width="1" height="1" fill="#6b3a1c"/>
+    <rect x="7" y="7" width="1" height="1" fill="#1a0e08"/>
+    <rect x="5" y="8" width="2" height="1" fill="#1a0e08"/>
+    <!-- ink bottle cap -->
+    <rect x="4" y="9" width="6" height="1" fill="#4a2611"/>
+    <rect x="3" y="10" width="8" height="2" fill="#6b3a1c"/>
+    <rect x="3" y="11" width="8" height="1" fill="#4a2611"/>
+    <!-- bottle body -->
+    <rect x="2" y="12" width="10" height="1" fill="#1a0e08"/>
+    <rect x="2" y="13" width="10" height="1" fill="#2a160c"/>
+    <rect x="3" y="13" width="2" height="3" fill="#ffb347" opacity="0.4"/>
+    <rect x="2" y="14" width="10" height="4" fill="#1a0e08"/>
+    <rect x="3" y="14" width="1" height="2" fill="#ffb347" opacity="0.3"/>
+    <!-- base -->
+    <rect x="1" y="18" width="12" height="1" fill="#4a2611"/>
+    <rect x="2" y="19" width="10" height="1" fill="#1a0e08"/>
+  </svg>
+</div>
+
+<!-- ============================================================
+     INK SPLAT — tiny pixel droplets
+     ============================================================ -->
+<div class="sprite splat-sprite">
+  <svg viewBox="0 0 7 5" preserveAspectRatio="xMidYEnd meet" xmlns="http://www.w3.org/2000/svg">
+    <rect x="2" y="0" width="1" height="1" fill="#1a0e08"/>
+    <rect x="1" y="1" width="3" height="1" fill="#1a0e08"/>
+    <rect x="0" y="2" width="5" height="1" fill="#1a0e08"/>
+    <rect x="1" y="3" width="3" height="1" fill="#1a0e08"/>
+    <rect x="5" y="2" width="1" height="1" fill="#1a0e08"/>
+    <rect x="6" y="1" width="1" height="1" fill="#1a0e08"/>
+    <rect x="2" y="4" width="2" height="1" fill="#2a160c"/>
+  </svg>
+</div>
+
+<!-- ============================================================
+     BOOK STACK + TEACUP
+     ============================================================ -->
+<div class="sprite books-sprite">
+  <svg viewBox="0 0 30 33" preserveAspectRatio="xMidYEnd meet" xmlns="http://www.w3.org/2000/svg">
+    <!-- steam -->
+    <g class="steam-puff">
+      <rect x="13" y="0" width="1" height="1" fill="#f3e3c3" opacity="0.7"/>
+      <rect x="12" y="1" width="3" height="1" fill="#f3e3c3" opacity="0.5"/>
+      <rect x="13" y="2" width="1" height="1" fill="#f3e3c3" opacity="0.4"/>
+    </g>
+    <g class="steam-puff-2">
+      <rect x="16" y="0" width="1" height="1" fill="#f3e3c3" opacity="0.6"/>
+      <rect x="15" y="1" width="3" height="1" fill="#f3e3c3" opacity="0.5"/>
+      <rect x="16" y="2" width="1" height="1" fill="#f3e3c3" opacity="0.3"/>
+    </g>
+    <!-- teacup -->
+    <rect x="10" y="4" width="10" height="1" fill="#1a0e08"/>
+    <rect x="10" y="5" width="10" height="1" fill="#6b3a1c"/>
+    <rect x="11" y="6" width="8" height="1" fill="#4a2611"/>
+    <rect x="10" y="6" width="1" height="6" fill="#fff5d6"/>
+    <rect x="11" y="7" width="8" height="5" fill="#f3e3c3"/>
+    <rect x="18" y="6" width="2" height="6" fill="#d9c294"/>
+    <rect x="19" y="6" width="1" height="6" fill="#1a0e08"/>
+    <!-- cup handle -->
+    <rect x="20" y="7" width="2" height="1" fill="#1a0e08"/>
+    <rect x="20" y="8" width="1" height="1" fill="#f3e3c3"/>
+    <rect x="21" y="8" width="1" height="3" fill="#1a0e08"/>
+    <rect x="20" y="11" width="2" height="1" fill="#1a0e08"/>
+    <!-- saucer -->
+    <rect x="9" y="12" width="12" height="1" fill="#d9c294"/>
+    <rect x="9" y="13" width="12" height="1" fill="#1a0e08"/>
+    <!-- book 3 (top) -->
+    <rect x="3" y="15" width="20" height="1" fill="#4a2611"/>
+    <rect x="2" y="16" width="22" height="1" fill="#a8632e"/>
+    <rect x="2" y="17" width="22" height="3" fill="#8a5028"/>
+    <rect x="3" y="18" width="20" height="1" fill="#4a2611"/>
+    <rect x="4" y="18" width="18" height="1" fill="#ffb347"/>
+    <rect x="2" y="20" width="22" height="1" fill="#4a2611"/>
+    <rect x="2" y="21" width="22" height="1" fill="#1a0e08"/>
+    <!-- book 2 (middle, offset left) -->
+    <rect x="1" y="22" width="22" height="1" fill="#4a2611"/>
+    <rect x="0" y="23" width="24" height="1" fill="#6b3a1c"/>
+    <rect x="0" y="24" width="24" height="2" fill="#4a2611"/>
+    <rect x="1" y="25" width="22" height="1" fill="#d9c294"/>
+    <rect x="0" y="26" width="24" height="1" fill="#2a160c"/>
+    <rect x="0" y="27" width="24" height="1" fill="#1a0e08"/>
+    <!-- book 1 (bottom, offset right) -->
+    <rect x="3" y="28" width="24" height="1" fill="#8a5028"/>
+    <rect x="2" y="29" width="26" height="1" fill="#a8632e"/>
+    <rect x="2" y="30" width="26" height="1" fill="#6b3a1c"/>
+    <rect x="3" y="30" width="24" height="1" fill="#ffb347"/>
+    <rect x="2" y="31" width="26" height="1" fill="#4a2611"/>
+    <rect x="2" y="32" width="26" height="1" fill="#1a0e08"/>
+  </svg>
+</div>
+
+<div class="focus-vignette"></div>
+
+<!-- ============================================================
+     MAIN STAGE — ENVELOPE
+     ============================================================ -->
+<div class="scene">
+  <div class="stage">
+
+    <div class="envelope-wrap" id="envelope" role="button" tabindex="0" aria-label="Open invitation">
+
+      <!-- Envelope BACK + body + front pocket -->
+      <svg class="envelope-svg" viewBox="0 0 80 55" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- back panel (rectangular) - darker brown background -->
+        <rect x="2" y="2" width="76" height="51" fill="#4a2611"/>
+        <rect x="3" y="3" width="74" height="49" fill="#6b3a1c"/>
+        <rect x="4" y="4" width="72" height="47" fill="#8a5028"/>
+        <!-- inner dark area where letter sits -->
+        <rect x="6" y="6" width="68" height="32" fill="#4a2611"/>
+        <rect x="7" y="7" width="66" height="30" fill="#2a160c"/>
+
+        <!-- letter peeking out from inside -->
+        <rect x="10" y="14" width="60" height="14" fill="#d9c294"/>
+        <rect x="10" y="14" width="60" height="1" fill="#fff5d6"/>
+        <rect x="11" y="15" width="58" height="13" fill="#f3e3c3"/>
+        <!-- handwritten address scribble lines on the letter -->
+        <rect x="14" y="18" width="20" height="1" fill="#3a1f0e"/>
+        <rect x="14" y="21" width="28" height="1" fill="#3a1f0e"/>
+        <rect x="14" y="24" width="16" height="1" fill="#3a1f0e"/>
+
+        <!-- POSTAGE STAMP in top right - pixel art star -->
+        <rect x="56" y="6" width="18" height="22" fill="#c0392b"/>
+        <rect x="57" y="7" width="16" height="20" fill="#f3e3c3"/>
+        <rect x="58" y="8" width="14" height="18" fill="#c0392b"/>
+        <!-- stamp inner border -->
+        <rect x="59" y="9" width="12" height="1" fill="#7a1f15"/>
+        <rect x="59" y="25" width="12" height="1" fill="#7a1f15"/>
+        <rect x="59" y="9" width="1" height="17" fill="#7a1f15"/>
+        <rect x="70" y="9" width="1" height="17" fill="#7a1f15"/>
+        <!-- star icon on stamp -->
+        <rect x="64" y="12" width="2" height="1" fill="#ffd27a"/>
+        <rect x="63" y="13" width="4" height="1" fill="#ffd27a"/>
+        <rect x="62" y="14" width="6" height="1" fill="#ffd27a"/>
+        <rect x="63" y="15" width="4" height="1" fill="#ffd27a"/>
+        <rect x="62" y="16" width="2" height="1" fill="#ffd27a"/>
+        <rect x="66" y="16" width="2" height="1" fill="#ffd27a"/>
+        <!-- bottom value text bar -->
+        <rect x="61" y="22" width="8" height="1" fill="#f3e3c3"/>
+        <!-- perforation dots on stamp edges (every other pixel = perforated) -->
+        <rect x="56" y="6" width="1" height="1" fill="#6b3a1c"/>
+        <rect x="58" y="6" width="1" height="1" fill="#6b3a1c"/>
+        <rect x="60" y="6" width="1" height="1" fill="#6b3a1c"/>
+        <rect x="62" y="6" width="1" height="1" fill="#6b3a1c"/>
+        <rect x="64" y="6" width="1" height="1" fill="#6b3a1c"/>
+        <rect x="66" y="6" width="1" height="1" fill="#6b3a1c"/>
+        <rect x="68" y="6" width="1" height="1" fill="#6b3a1c"/>
+        <rect x="70" y="6" width="1" height="1" fill="#6b3a1c"/>
+        <rect x="72" y="6" width="1" height="1" fill="#6b3a1c"/>
+        <rect x="56" y="27" width="1" height="1" fill="#6b3a1c"/>
+        <rect x="58" y="27" width="1" height="1" fill="#6b3a1c"/>
+        <rect x="60" y="27" width="1" height="1" fill="#6b3a1c"/>
+        <rect x="62" y="27" width="1" height="1" fill="#6b3a1c"/>
+        <rect x="64" y="27" width="1" height="1" fill="#6b3a1c"/>
+        <rect x="66" y="27" width="1" height="1" fill="#6b3a1c"/>
+        <rect x="68" y="27" width="1" height="1" fill="#6b3a1c"/>
+        <rect x="70" y="27" width="1" height="1" fill="#6b3a1c"/>
+        <rect x="72" y="27" width="1" height="1" fill="#6b3a1c"/>
+
+        <!-- POSTMARK circular ink stamp overlapping the stamp -->
+        <rect x="48" y="12" width="6" height="1" fill="#3a1f0e" opacity="0.6"/>
+        <rect x="46" y="13" width="10" height="1" fill="#3a1f0e" opacity="0.6"/>
+        <rect x="45" y="14" width="2" height="6" fill="#3a1f0e" opacity="0.6"/>
+        <rect x="55" y="14" width="2" height="6" fill="#3a1f0e" opacity="0.6"/>
+        <rect x="46" y="20" width="10" height="1" fill="#3a1f0e" opacity="0.6"/>
+        <rect x="48" y="21" width="6" height="1" fill="#3a1f0e" opacity="0.6"/>
+        <rect x="48" y="16" width="6" height="2" fill="#3a1f0e" opacity="0.5"/>
+
+        <!-- FRONT POCKET that covers bottom — V-notched top using stepped pixels -->
+        <rect x="2" y="38" width="76" height="15" fill="#4a2611"/>
+        <!-- staircase v-notch top, drawn as discrete steps from edges to center -->
+        <!-- left half going up -->
+        <rect x="2" y="37" width="6" height="1" fill="#4a2611"/>
+        <rect x="8" y="36" width="4" height="1" fill="#4a2611"/>
+        <rect x="12" y="35" width="4" height="1" fill="#4a2611"/>
+        <rect x="16" y="34" width="4" height="1" fill="#4a2611"/>
+        <rect x="20" y="33" width="4" height="1" fill="#4a2611"/>
+        <rect x="24" y="32" width="4" height="1" fill="#4a2611"/>
+        <rect x="28" y="31" width="4" height="1" fill="#4a2611"/>
+        <rect x="32" y="30" width="4" height="1" fill="#4a2611"/>
+        <rect x="36" y="29" width="4" height="1" fill="#4a2611"/>
+        <!-- right half going down -->
+        <rect x="40" y="29" width="4" height="1" fill="#4a2611"/>
+        <rect x="44" y="30" width="4" height="1" fill="#4a2611"/>
+        <rect x="48" y="31" width="4" height="1" fill="#4a2611"/>
+        <rect x="52" y="32" width="4" height="1" fill="#4a2611"/>
+        <rect x="56" y="33" width="4" height="1" fill="#4a2611"/>
+        <rect x="60" y="34" width="4" height="1" fill="#4a2611"/>
+        <rect x="64" y="35" width="4" height="1" fill="#4a2611"/>
+        <rect x="68" y="36" width="4" height="1" fill="#4a2611"/>
+        <rect x="72" y="37" width="6" height="1" fill="#4a2611"/>
+
+        <!-- highlight pixels along the same staircase one row in -->
+        <rect x="3" y="38" width="76" height="1" fill="#8a5028"/>
+        <rect x="8" y="37" width="4" height="1" fill="#8a5028"/>
+        <rect x="12" y="36" width="4" height="1" fill="#8a5028"/>
+        <rect x="16" y="35" width="4" height="1" fill="#8a5028"/>
+        <rect x="20" y="34" width="4" height="1" fill="#8a5028"/>
+        <rect x="24" y="33" width="4" height="1" fill="#8a5028"/>
+        <rect x="28" y="32" width="4" height="1" fill="#8a5028"/>
+        <rect x="32" y="31" width="4" height="1" fill="#8a5028"/>
+        <rect x="36" y="30" width="4" height="1" fill="#8a5028"/>
+        <rect x="40" y="30" width="4" height="1" fill="#8a5028"/>
+        <rect x="44" y="31" width="4" height="1" fill="#8a5028"/>
+        <rect x="48" y="32" width="4" height="1" fill="#8a5028"/>
+        <rect x="52" y="33" width="4" height="1" fill="#8a5028"/>
+        <rect x="56" y="34" width="4" height="1" fill="#8a5028"/>
+        <rect x="60" y="35" width="4" height="1" fill="#8a5028"/>
+        <rect x="64" y="36" width="4" height="1" fill="#8a5028"/>
+        <rect x="68" y="37" width="4" height="1" fill="#8a5028"/>
+
+        <!-- main fill of front pocket -->
+        <rect x="4" y="39" width="72" height="12" fill="#6b3a1c"/>
+        <rect x="3" y="51" width="74" height="1" fill="#4a2611"/>
+        <rect x="2" y="52" width="76" height="1" fill="#1a0e08"/>
+
+        <!-- outer pixel border (chunky black outline) -->
+        <rect x="0" y="2" width="2" height="51" fill="#1a0e08"/>
+        <rect x="78" y="2" width="2" height="51" fill="#1a0e08"/>
+        <rect x="2" y="0" width="76" height="2" fill="#1a0e08"/>
+        <rect x="2" y="53" width="76" height="2" fill="#1a0e08"/>
+      </svg>
+
+      <!-- FLAP (the part that opens) - separate SVG so it can rotate -->
+      <svg class="env-flap-svg" viewBox="0 0 80 33" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- staircase triangle - mirror of front pocket but pointing down -->
+        <!-- left side going down -->
+        <rect x="2" y="0" width="76" height="2" fill="#1a0e08"/>
+        <rect x="0" y="2" width="2" height="2" fill="#1a0e08"/>
+        <rect x="78" y="2" width="2" height="2" fill="#1a0e08"/>
+        <rect x="2" y="2" width="76" height="2" fill="#8a5028"/>
+
+        <rect x="2" y="4" width="76" height="3" fill="#8a5028"/>
+        <rect x="3" y="4" width="74" height="2" fill="#a8632e"/>
+
+        <!-- triangle fill (V going down) - drawn as stepped trapezoids -->
+        <rect x="2" y="7"  width="76" height="1" fill="#8a5028"/>
+        <rect x="4" y="8"  width="72" height="1" fill="#8a5028"/>
+        <rect x="6" y="9"  width="68" height="1" fill="#8a5028"/>
+        <rect x="8" y="10" width="64" height="1" fill="#8a5028"/>
+        <rect x="10" y="11" width="60" height="1" fill="#8a5028"/>
+        <rect x="12" y="12" width="56" height="1" fill="#8a5028"/>
+        <rect x="14" y="13" width="52" height="1" fill="#8a5028"/>
+        <rect x="16" y="14" width="48" height="1" fill="#8a5028"/>
+        <rect x="18" y="15" width="44" height="1" fill="#8a5028"/>
+        <rect x="20" y="16" width="40" height="1" fill="#8a5028"/>
+        <rect x="22" y="17" width="36" height="1" fill="#8a5028"/>
+        <rect x="24" y="18" width="32" height="1" fill="#8a5028"/>
+        <rect x="26" y="19" width="28" height="1" fill="#8a5028"/>
+        <rect x="28" y="20" width="24" height="1" fill="#8a5028"/>
+        <rect x="30" y="21" width="20" height="1" fill="#8a5028"/>
+        <rect x="32" y="22" width="16" height="1" fill="#8a5028"/>
+        <rect x="34" y="23" width="12" height="1" fill="#8a5028"/>
+        <rect x="36" y="24" width="8"  height="1" fill="#8a5028"/>
+        <rect x="38" y="25" width="4"  height="1" fill="#8a5028"/>
+
+        <!-- darker edge along the staircase -->
+        <rect x="0" y="7"  width="2" height="1" fill="#1a0e08"/>
+        <rect x="2" y="8"  width="2" height="1" fill="#1a0e08"/>
+        <rect x="4" y="9"  width="2" height="1" fill="#1a0e08"/>
+        <rect x="6" y="10" width="2" height="1" fill="#1a0e08"/>
+        <rect x="8" y="11" width="2" height="1" fill="#1a0e08"/>
+        <rect x="10" y="12" width="2" height="1" fill="#1a0e08"/>
+        <rect x="12" y="13" width="2" height="1" fill="#1a0e08"/>
+        <rect x="14" y="14" width="2" height="1" fill="#1a0e08"/>
+        <rect x="16" y="15" width="2" height="1" fill="#1a0e08"/>
+        <rect x="18" y="16" width="2" height="1" fill="#1a0e08"/>
+        <rect x="20" y="17" width="2" height="1" fill="#1a0e08"/>
+        <rect x="22" y="18" width="2" height="1" fill="#1a0e08"/>
+        <rect x="24" y="19" width="2" height="1" fill="#1a0e08"/>
+        <rect x="26" y="20" width="2" height="1" fill="#1a0e08"/>
+        <rect x="28" y="21" width="2" height="1" fill="#1a0e08"/>
+        <rect x="30" y="22" width="2" height="1" fill="#1a0e08"/>
+        <rect x="32" y="23" width="2" height="1" fill="#1a0e08"/>
+        <rect x="34" y="24" width="2" height="1" fill="#1a0e08"/>
+        <rect x="36" y="25" width="2" height="1" fill="#1a0e08"/>
+        <rect x="38" y="26" width="4" height="1" fill="#1a0e08"/>
+
+        <rect x="78" y="7"  width="2" height="1" fill="#1a0e08"/>
+        <rect x="76" y="8"  width="2" height="1" fill="#1a0e08"/>
+        <rect x="74" y="9"  width="2" height="1" fill="#1a0e08"/>
+        <rect x="72" y="10" width="2" height="1" fill="#1a0e08"/>
+        <rect x="70" y="11" width="2" height="1" fill="#1a0e08"/>
+        <rect x="68" y="12" width="2" height="1" fill="#1a0e08"/>
+        <rect x="66" y="13" width="2" height="1" fill="#1a0e08"/>
+        <rect x="64" y="14" width="2" height="1" fill="#1a0e08"/>
+        <rect x="62" y="15" width="2" height="1" fill="#1a0e08"/>
+        <rect x="60" y="16" width="2" height="1" fill="#1a0e08"/>
+        <rect x="58" y="17" width="2" height="1" fill="#1a0e08"/>
+        <rect x="56" y="18" width="2" height="1" fill="#1a0e08"/>
+        <rect x="54" y="19" width="2" height="1" fill="#1a0e08"/>
+        <rect x="52" y="20" width="2" height="1" fill="#1a0e08"/>
+        <rect x="50" y="21" width="2" height="1" fill="#1a0e08"/>
+        <rect x="48" y="22" width="2" height="1" fill="#1a0e08"/>
+        <rect x="46" y="23" width="2" height="1" fill="#1a0e08"/>
+        <rect x="44" y="24" width="2" height="1" fill="#1a0e08"/>
+        <rect x="42" y="25" width="2" height="1" fill="#1a0e08"/>
+      </svg>
+
+      <!-- WAX SEAL - true pixel circular shape -->
+      <svg class="env-seal-svg" viewBox="0 0 14 14" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <!-- pixel-rounded circle shape -->
+        <rect x="4" y="0" width="6" height="1" fill="#7a1f15"/>
+        <rect x="2" y="1" width="10" height="1" fill="#7a1f15"/>
+        <rect x="3" y="1" width="8" height="1" fill="#c0392b"/>
+        <rect x="1" y="2" width="12" height="1" fill="#7a1f15"/>
+        <rect x="2" y="2" width="10" height="1" fill="#e85a4a"/>
+        <rect x="3" y="2" width="8" height="1" fill="#c0392b"/>
+        <rect x="1" y="3" width="12" height="1" fill="#c0392b"/>
+        <rect x="2" y="3" width="2" height="1" fill="#e85a4a"/>
+        <rect x="0" y="4" width="14" height="1" fill="#7a1f15"/>
+        <rect x="1" y="4" width="12" height="1" fill="#c0392b"/>
+        <rect x="2" y="4" width="2" height="1" fill="#e85a4a"/>
+        <rect x="0" y="5" width="14" height="1" fill="#c0392b"/>
+        <rect x="2" y="5" width="2" height="1" fill="#e85a4a"/>
+        <rect x="0" y="6" width="14" height="1" fill="#c0392b"/>
+        <rect x="0" y="7" width="14" height="1" fill="#c0392b"/>
+        <rect x="0" y="8" width="14" height="1" fill="#c0392b"/>
+        <rect x="0" y="9" width="14" height="1" fill="#7a1f15"/>
+        <rect x="1" y="9" width="12" height="1" fill="#c0392b"/>
+        <rect x="1" y="10" width="12" height="1" fill="#7a1f15"/>
+        <rect x="2" y="10" width="10" height="1" fill="#c0392b"/>
+        <rect x="1" y="11" width="12" height="1" fill="#7a1f15"/>
+        <rect x="3" y="11" width="8" height="1" fill="#c0392b"/>
+        <rect x="2" y="12" width="10" height="1" fill="#7a1f15"/>
+        <rect x="4" y="13" width="6" height="1" fill="#7a1f15"/>
+
+        <!-- star embossed in middle -->
+        <rect x="6" y="4" width="2" height="1" fill="#ffd27a"/>
+        <rect x="5" y="5" width="4" height="1" fill="#ffd27a"/>
+        <rect x="3" y="6" width="8" height="1" fill="#ffd27a"/>
+        <rect x="4" y="7" width="6" height="1" fill="#ffd27a"/>
+        <rect x="5" y="8" width="4" height="1" fill="#ffd27a"/>
+        <rect x="4" y="9" width="2" height="1" fill="#ffd27a"/>
+        <rect x="8" y="9" width="2" height="1" fill="#ffd27a"/>
+      </svg>
+
+      <div class="hint">▸ TAP TO OPEN ◂</div>
+    </div>
+
+    <!-- ============================================================
+         LETTER
+         ============================================================ -->
+    <div class="letter" id="letter" role="dialog" aria-label="Invitation letter">
+      <div class="letter-paper">
+
+        <!-- pixel wax seal in corner -->
+        <svg class="letter-seal-mark" viewBox="0 0 12 12" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="0" width="6" height="1" fill="#7a1f15"/>
+          <rect x="1" y="1" width="10" height="1" fill="#7a1f15"/>
+          <rect x="2" y="1" width="8" height="1" fill="#c0392b"/>
+          <rect x="0" y="2" width="12" height="1" fill="#7a1f15"/>
+          <rect x="1" y="2" width="10" height="1" fill="#e85a4a"/>
+          <rect x="2" y="2" width="8" height="1" fill="#c0392b"/>
+          <rect x="0" y="3" width="12" height="6" fill="#c0392b"/>
+          <rect x="1" y="3" width="2" height="1" fill="#e85a4a"/>
+          <rect x="0" y="9" width="12" height="1" fill="#7a1f15"/>
+          <rect x="1" y="9" width="10" height="1" fill="#c0392b"/>
+          <rect x="1" y="10" width="10" height="1" fill="#7a1f15"/>
+          <rect x="3" y="11" width="6" height="1" fill="#7a1f15"/>
+          <!-- star -->
+          <rect x="5" y="4" width="2" height="1" fill="#ffd27a"/>
+          <rect x="3" y="5" width="6" height="1" fill="#ffd27a"/>
+          <rect x="4" y="6" width="4" height="1" fill="#ffd27a"/>
+          <rect x="3" y="7" width="2" height="1" fill="#ffd27a"/>
+          <rect x="7" y="7" width="2" height="1" fill="#ffd27a"/>
+        </svg>
+
+        <div class="letter-content">
+
+          <!-- ↓↓↓ EDIT HEADING ↓↓↓ -->
+          <div class="letter-heading">
+            ~ YOU'RE INVITED ~
+          </div>
+          <!-- ↑↑↑ EDIT HEADING ↑↑↑ -->
+
+          <!-- ↓↓↓ EDIT MESSAGE BODY ↓↓↓ -->
+          <div class="letter-body">Dear friend,
+
+We'd be so glad to have you join us. This little corner of the internet has been built just for you — pull up a chair, light a candle, and step inside.
+
+Hope to see you there.</div>
+          <!-- ↑↑↑ EDIT MESSAGE BODY ↑↑↑ -->
+
+          <div class="letter-divider"></div>
+
+          <div class="invite-link-wrap">
+            <div class="invite-prefix">~ your invitation ~</div>
+
+            <!-- ↓↓↓ EDIT THE LINK URL AND TEXT ↓↓↓ -->
+            <a href="https://example.com"
+               class="invite-link"
+               target="_blank"
+               rel="noopener noreferrer">
+              ENTER &nbsp;▸
+            </a>
+            <!-- ↑↑↑ EDIT THE LINK URL AND TEXT ↑↑↑ -->
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  /* Generate raindrops */
+  const rainContainer = document.getElementById('rain');
+  for (let i = 0; i < 60; i++) {
+    const drop = document.createElement('div');
+    drop.className = 'raindrop';
+    drop.style.left = Math.random() * 100 + 'vw';
+    drop.style.animationDuration = (0.5 + Math.random() * 0.7) + 's';
+    drop.style.animationDelay = (Math.random() * 2) + 's';
+    drop.style.height = (6 + Math.floor(Math.random() * 4) * 3) + 'px';
+    rainContainer.appendChild(drop);
+  }
+
+  /* Envelope open */
+  const envelope = document.getElementById('envelope');
+  const letter   = document.getElementById('letter');
+  let opened = false;
+
+  function openEnvelope() {
+    if (opened) return;
+    opened = true;
+    envelope.classList.add('opening');
+    setTimeout(() => envelope.classList.add('opened'), 700);
+    setTimeout(() => {
+      letter.classList.add('showing');
+      document.body.classList.add('letter-open');
+    }, 600);
+  }
+
+  envelope.addEventListener('click', openEnvelope);
+  envelope.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openEnvelope();
+    }
+  });
+</script>
+
+</body>
+</html>
